@@ -23,6 +23,12 @@ const studentSchema = new mongoose.Schema(
       select: false
     },
 
+    role: {
+      type: String,
+      enum: ["student", "admin"],
+      default: "student"
+    },
+
     targetCareer: {
       type: String,
       default: "Not selected",

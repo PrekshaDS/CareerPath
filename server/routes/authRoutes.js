@@ -36,12 +36,13 @@ async function authenticateStudent(req, res, next) {
   }
 }
 
-// Return only safe student fields.
+// Return safe account fields, including role for frontend routing.
 function studentProfile(student) {
   return {
     id: student._id,
     name: student.name,
     email: student.email,
+    role: student.role || "student",
     targetCareer: student.targetCareer,
     skills: student.skills,
     interests: student.interests,
@@ -55,6 +56,7 @@ function studentProfile(student) {
 }
 
 // STUDENT REGISTRATION
+// Public registration always creates a student, never an admin.
 router.post("/register", async (req, res) => {
   try {
     const {
@@ -102,7 +104,8 @@ router.post("/register", async (req, res) => {
     const studentData = {
       name: name.trim(),
       email: normalizedEmail,
-      password: await bcrypt.hash(password, 12)
+      password: await bcrypt.hash(password, 12),
+      role: "student"
     };
 
     if (typeof targetCareer === "string" && targetCareer.trim()) {
@@ -150,7 +153,8 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// STUDENT LOGIN
+// LOGIN
+// Works for students and admins whose accounts exist in the database.
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -181,8 +185,13 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    const role = student.role || "student";
+
     const token = jwt.sign(
-      { studentId: student._id },
+      {
+        studentId: student._id,
+        role
+      },
       JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -203,7 +212,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// GET THE LOGGED-IN STUDENT'S PROFILE
+// GET THE LOGGED-IN USER'S PROFILE
 router.get("/me", authenticateStudent, async (req, res) => {
   try {
     const student = await Student.findById(req.studentId);
@@ -211,7 +220,7 @@ router.get("/me", authenticateStudent, async (req, res) => {
     if (!student) {
       return res.status(404).json({
         success: false,
-        message: "Student not found"
+        message: "Account not found"
       });
     }
 
@@ -224,14 +233,15 @@ router.get("/me", authenticateStudent, async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Could not fetch student profile"
+      message: "Could not fetch profile"
     });
   }
 });
 
-// UPDATE THE LOGGED-IN STUDENT'S PROFILE
+// UPDATE THE LOGGED-IN USER'S PROFILE
 router.put("/me", authenticateStudent, async (req, res) => {
   try {
+    // Role and email cannot be changed through profile updates.
     const allowedFields = [
       "name",
       "targetCareer",
@@ -305,9 +315,7 @@ router.put("/me", authenticateStudent, async (req, res) => {
       if (updates[field] !== undefined) {
         if (
           !Array.isArray(updates[field]) ||
-          !updates[field].every(
-            item => typeof item === "string"
-          )
+          !updates[field].every(item => typeof item === "string")
         ) {
           return res.status(400).json({
             success: false,
@@ -325,12 +333,7 @@ router.put("/me", authenticateStudent, async (req, res) => {
       }
     }
 
-    for (const field of [
-      "bio",
-      "college",
-      "github",
-      "linkedin"
-    ]) {
+    for (const field of ["bio", "college", "github", "linkedin"]) {
       if (updates[field] !== undefined) {
         if (typeof updates[field] !== "string") {
           return res.status(400).json({
@@ -355,7 +358,7 @@ router.put("/me", authenticateStudent, async (req, res) => {
     if (!student) {
       return res.status(404).json({
         success: false,
-        message: "Student not found"
+        message: "Account not found"
       });
     }
 
