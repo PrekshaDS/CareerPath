@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const studentSchema = new mongoose.Schema(
@@ -7,6 +8,7 @@ const studentSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
+
     email: {
       type: String,
       required: true,
@@ -14,24 +16,55 @@ const studentSchema = new mongoose.Schema(
       lowercase: true,
       trim: true
     },
+
     password: {
       type: String,
       required: true,
       select: false
     },
+
     targetCareer: {
       type: String,
-      default: "Not selected"
+      default: "Not selected",
+      trim: true
     },
+
     skills: {
       type: [String],
       default: []
     },
+
+    interests: {
+      type: [String],
+      default: []
+    },
+
     semester: {
       type: Number,
       default: 1,
       min: 1,
       max: 12
+    },
+
+    bio: {
+      type: String,
+      default: "",
+      maxlength: 500
+    },
+
+    college: {
+      type: String,
+      default: ""
+    },
+
+    github: {
+      type: String,
+      default: ""
+    },
+
+    linkedin: {
+      type: String,
+      default: ""
     }
   },
   { timestamps: true }

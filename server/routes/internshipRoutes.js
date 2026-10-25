@@ -5,15 +5,19 @@ const Internship = require("../models/Internship");
 
 const router = express.Router();
 
-// GET: List internships with optional search and filters
+// GET: List internships with search and filters
 router.get("/", async (req, res) => {
   try {
     const { search, mode, category } = req.query;
 
     const filter = { active: true };
 
-    if (search) {
-      const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (search && search.trim()) {
+      const safeSearch = search.trim().replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
+
       filter.$or = [
         { title: { $regex: safeSearch, $options: "i" } },
         { company: { $regex: safeSearch, $options: "i" } },
@@ -25,28 +29,30 @@ router.get("/", async (req, res) => {
       filter.mode = mode;
     }
 
-    if (category) {
-      filter.category = category;
+    if (category && category.trim()) {
+      filter.category = category.trim();
     }
 
     const internships = await Internship.find(filter)
       .sort({ createdAt: -1 })
       .limit(100);
 
-    res.json({
+    return res.json({
       success: true,
       count: internships.length,
       internships,
     });
   } catch (error) {
-    res.status(500).json({
+    console.error("Fetch internships error:", error);
+
+    return res.status(500).json({
       success: false,
       message: "Failed to fetch internships.",
     });
   }
 });
 
-// GET: Fetch one internship
+// GET: Fetch one internship by MongoDB ID
 router.get("/:id", async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) {
@@ -68,9 +74,14 @@ router.get("/:id", async (req, res) => {
       });
     }
 
-    res.json({ success: true, internship });
+    return res.json({
+      success: true,
+      internship,
+    });
   } catch (error) {
-    res.status(500).json({
+    console.error("Fetch internship error:", error);
+
+    return res.status(500).json({
       success: false,
       message: "Failed to fetch internship.",
     });
