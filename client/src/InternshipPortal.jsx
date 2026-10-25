@@ -2,7 +2,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "./InternshipPortal.css";
 
-const INTERNSHIPS_API = "http://localhost:5000/api/internships";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5000";
+
+const INTERNSHIPS_API = `${API_BASE_URL}/api/internships`;
 
 function getSavedKey(student) {
   const identity =

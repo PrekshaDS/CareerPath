@@ -3,10 +3,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import InternshipPortal from "./InternshipPortal";
 import "./App.css";
 
-const API_URL = "http://localhost:5000/api/careers";
-const AUTH_API = "http://localhost:5000/api/auth";
-const ASSESSMENT_API = "http://localhost:5000/api/assessments";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5000";
 
+const API_URL = `${API_BASE_URL}/api/careers`;
+const AUTH_API = `${API_BASE_URL}/api/auth`;
+const ASSESSMENT_API = `${API_BASE_URL}/api/assessments`;
 const emptyCareer = {
   title: "",
   description: "",
